@@ -30,7 +30,27 @@ environment:
 dependencies:
   flutter:
     sdk: flutter
+  flutter_appauth: 6.0.1
+  http: ^1.0.0
+  uuid: ^3.0.6
 
+
+  #code generator for get_it
+  injectable: ^1.5.3
+
+  #Service Locator
+  get_it: ^7.2.0
+  dio: ^5.3.0
+  chucker_flutter: ^1.5.2
+
+
+
+  byjus_network:
+    # path: /Users/tnluser/Documents/BYJU'S/byjus-flutter-base/packages/byjus_network
+    git:
+      url: https://github.com/byjutech/byjus-flutter-base.git
+      path: packages/byjus_network
+      ref: main
 
   # The following adds the Cupertino Icons font to your application.
   # Use with the CupertinoIcons class for iOS style icons.
@@ -46,6 +66,10 @@ dev_dependencies:
   # package. See that file for information about deactivating specific lint
   # rules and activating additional ones.
   flutter_lints: ^2.0.0
+  injectable_generator: ^1.5.3
+  build_runner: ^2.1.10
+  fimber: ^0.7.0
+
 
 # For information on the generic Dart part of this file, see the
 # following page: https://dart.dev/tools/pub/pubspec
