@@ -1,3 +1,5 @@
+import sun.net.www.protocol.http.BasicAuthentication
+
 buildscript {
     ext.kotlin_version = '1.7.10'
     repositories {
@@ -15,6 +17,14 @@ allprojects {
     repositories {
         google()
         mavenCentral()
+        maven {
+            url = uri("http://maven.byjus.com:8081/artifactory/libs-release-local")
+            allowInsecureProtocol = true
+            credentials {
+                username = "reader"
+                password = "readeR@123"
+            }
+        }
     }
 }
 
