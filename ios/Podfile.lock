@@ -1,4 +1,5 @@
 PODS:
+  - Alamofire (4.8.0)
   - AppAuth (1.6.2):
     - AppAuth/Core (= 1.6.2)
     - AppAuth/ExternalUserAgent (= 1.6.2)
@@ -16,6 +17,7 @@ PODS:
     - FlutterMacOS
 
 DEPENDENCIES:
+  - Alamofire (= 4.8)
   - AppAuth (= 1.6.2)
   - Flutter (from `Flutter`)
   - path_provider_foundation (from `.symlinks/plugins/path_provider_foundation/darwin`)
@@ -24,6 +26,7 @@ DEPENDENCIES:
 
 SPEC REPOS:
   trunk:
+    - Alamofire
     - AppAuth
 
 EXTERNAL SOURCES:
@@ -37,12 +40,13 @@ EXTERNAL SOURCES:
     :path: ".symlinks/plugins/shared_preferences_foundation/darwin"
 
 SPEC CHECKSUMS:
+  Alamofire: 3ec537f71edc9804815215393ae2b1a8ea33a844
   AppAuth: 3bb1d1cd9340bd09f5ed189fb00b1cc28e1e8570
   Flutter: f04841e97a9d0b0a8025694d0796dd46242b2854
   path_provider_foundation: 29f094ae23ebbca9d3d0cec13889cd9060c0e943
   share_plus: 599aa54e4ea31d4b4c0e9c911bcc26c55e791028
   shared_preferences_foundation: 5b919d13b803cadd15ed2dc053125c68730e5126
 
-PODFILE CHECKSUM: 9ffa52c15c45c948c08334211fbd8de535e42314
+PODFILE CHECKSUM: 613373d6d0b1a54280d0dd464145fe5a1acc99d2
 
 COCOAPODS: 1.10.2

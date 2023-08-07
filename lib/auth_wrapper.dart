@@ -5,6 +5,7 @@ import 'package:fimber/fimber.dart';
 
 String _nonceStatus = 'Unknown nonce value';
 String _verifyOTPStatus = 'Unknown verify otp status.';
+String _passcodePolicyStatus = 'Unknown Passcode Policy status.';
 String _nonce = '';
 
 void main() {
@@ -39,6 +40,11 @@ class _MyHomePageState extends State<MyApp> {
                   controller: _phoneNumberTextController,
                 ),
                 ElevatedButton(
+                  onPressed: () =>
+                      _getPasscodePolicy(_phoneNumberTextController.text),
+                  child: const Text('Get Passcode Policy  '),
+                ),
+                ElevatedButton(
                   onPressed: () => _getNonce(_phoneNumberTextController.text),
                   child: const Text('Request OTP'),
                 ),
@@ -56,6 +62,9 @@ class _MyHomePageState extends State<MyApp> {
                 ),
                 const SizedBox(height: 8),
                 Text(_verifyOTPStatus),
+                const SizedBox(height: 8),
+                Text(_passcodePolicyStatus),
+
               ],
             ),
           ),
@@ -99,6 +108,24 @@ class _MyHomePageState extends State<MyApp> {
 
     setState(() {
       _nonceStatus = nonce;
+    });
+  }
+
+  Future<void> _getPasscodePolicy(String phoneNumber) async {
+    String passcodePolicy;
+    try {
+      final args = <String, dynamic>{
+        'mobile_no': phoneNumber,
+      };
+      final String result = await platform.invokeMethod('passcodePolicy', args);
+      print(result);
+      passcodePolicy = result;
+    } on PlatformException catch (e) {
+      passcodePolicy = e.message ?? "Failed to get Passcode policy ";
+    }
+
+    setState(() {
+      _passcodePolicyStatus = passcodePolicy;
     });
   }
 }

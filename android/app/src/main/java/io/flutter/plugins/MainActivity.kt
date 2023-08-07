@@ -5,14 +5,18 @@ import android.util.Log
 import androidx.annotation.NonNull
 import com.byjus.authlib.AuthSDK
 import com.byjus.authlib.data.model.AppUserDeviceInfo
+import com.byjus.authlib.data.model.LoginResult
+import com.byjus.authlib.data.model.PasscodePolicyInfo
 import com.byjus.authlib.util.SDKConstants
+import com.google.gson.Gson
 import io.flutter.embedding.android.FlutterActivity
 import io.flutter.embedding.engine.FlutterEngine
 import io.flutter.plugin.common.MethodChannel
 
 class MainActivity : FlutterActivity() {
     private val CHANNEL = "com.byjus.auth/authapp"
-
+    private val AUTHSDK_ERROR_CODE = "AuthSdk:Error"
+    private val LOG_TAG = "AuthSdk:LOG"
     override fun configureFlutterEngine(@NonNull flutterEngine: FlutterEngine) {
         super.configureFlutterEngine(flutterEngine)
 
@@ -34,68 +38,91 @@ class MainActivity : FlutterActivity() {
             )
         )
 
-        MethodChannel(flutterEngine.dartExecutor, CHANNEL).setMethodCallHandler { call, result ->
-            if (call.method == "requestOTP") {
-                val args = call.arguments as? Map<*, *>
-                val mobileNo = args?.get("mobile_no") as? String
-                getNonceForRequestOTP(mobileNo ?: "") { nonce: String?, exception: Exception? ->
-                    if (exception != null) {
-                        Log.e("AuthSDK", "Test", exception)
-                        result.error(
-                            "UNAVAILABLE - Android", exception.message ?: "OTP request error", null
-                        )
-                    } else {
-                        Log.e("AuthSDK", "Test", exception)
-                        result.success(nonce)
-                    }
+        MethodChannel(
+            flutterEngine.dartExecutor, CHANNEL
+        ).setMethodCallHandler { call, result: MethodChannel.Result ->
+            when (call.method) {
+                "requestOTP" -> {
+                    getNonceForRequestOTP(call.arguments, result)
+                }
 
+                "verifyOTP" -> {
+                    verifyOTP(call.arguments, result)
                 }
-            } else if (call.method == "verifyOTP") {
-                val args = call.arguments as? Map<*, *>
-                val mobileNo = args?.get("mobile_no") as? String
-                val nonce = args?.get("nonce") as? String
-                val otp = args?.get("otp") as? String
-                verifyOTP(
-                    mobileNo ?: "", nonce ?: "", otp ?: ""
-                ) { idToken: String?, exception: Exception? ->
-                    if (exception != null) {
-                        Log.e("AuthSDK", "Test", exception)
-                        result.error(
-                            "UNAVAILABLE - Android",
-                            exception.message ?: "OTP verifcation error",
-                            null
-                        )
-                    } else {
-                        Log.e("AuthSDK", "Test", exception)
-                        result.success("success idToken - $idToken ")
-                    }
+
+                "passcodePolicy" -> {
+                    getPasscodePolicy(call.arguments, result)
                 }
+            }
+        }
+    }
+
+    private fun getPasscodePolicy(
+        arguments: Any, result: MethodChannel.Result
+    ) {
+        val args = arguments as? Map<*, *>
+        val mobileNo = args?.get("mobile_no") as? String ?: ""
+        AuthSDK.checkPasscodePolicy(
+            // "phone", "token"
+            identifier = "phone", value = mobileNo
+        ) { passcodePolicyInfo: PasscodePolicyInfo?, exception: Exception? ->
+            if (exception != null) {
+                Log.e(LOG_TAG, "PasscodePolicy", exception)
+                result.error(
+                    AUTHSDK_ERROR_CODE, exception.message ?: "OTP verifcation error", null
+                )
+            } else {
+                Log.e(LOG_TAG, "PasscodePolicy Success -- $passcodePolicyInfo")
+                result.success(passcodePolicyInfo?.objectToString())
             }
         }
     }
 
     private fun verifyOTP(
-        mobileNo: String, nonce: String, otp: String, callback: (String?, Exception?) -> Unit
+        argus: Any, result: MethodChannel.Result
     ) {
-        Log.d("AuthSDK" , "mobileNo - $mobileNo , nonce - $nonce , otp - $otp")
+        val args = argus as? Map<*, *>
+        val mobileNo = args?.get("mobile_no") as? String ?: ""
+        val nonce = args?.get("nonce") as? String ?: ""
+        val otp = args?.get("otp") as? String ?: ""
+
+
+        Log.d(LOG_TAG, "mobileNo - $mobileNo , nonce - $nonce , otp - $otp")
+
         AuthSDK.loginToIdentity(
             this, nonce, otp, mobileNo
-        ) { loginResult, exception ->
+        ) { idToken: LoginResult?, exception: Exception? ->
             if (exception != null) {
-                callback.invoke(null, exception)
+                Log.e(LOG_TAG, "Test", exception)
+                result.error(
+                    AUTHSDK_ERROR_CODE, exception.message ?: "OTP verifcation error", null
+                )
             } else {
-                callback.invoke(loginResult?.idToken, null)
-
+                Log.e(LOG_TAG, "Test", exception)
+                result.success("success idToken - $idToken ")
             }
         }
-
     }
 
 
-    private fun getNonceForRequestOTP(mobileNo: String, callback: (String?, Exception?) -> Unit) {
-        AuthSDK.requestOtp(
-            mobileNumber = mobileNo, otpType = "sms", feature = "", callback = callback
-        )
+    private fun getNonceForRequestOTP(arguments: Any, result: MethodChannel.Result) {
+        val args = arguments as? Map<*, *>
+        val mobileNo = args?.get("mobile_no") as? String ?: ""
+        AuthSDK.requestOtp(mobileNumber = mobileNo,
+            otpType = "sms",
+            feature = "",
+            callback = { nonce: String?, exception: Exception? ->
+                if (exception != null) {
+                    Log.e(LOG_TAG, "Test", exception)
+                    result.error(
+                        AUTHSDK_ERROR_CODE, exception.message ?: "OTP request error", null
+                    )
+                } else {
+                    Log.e(LOG_TAG, "Test", exception)
+                    result.success(nonce)
+                }
+
+            })
     }
 
     override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
@@ -104,5 +131,12 @@ class MainActivity : FlutterActivity() {
             AuthSDK.handleResult(requestCode, resultCode, data)
         }
     }
+
+    //transform a java object to json
+    fun Any.objectToString(): String {
+        val gson = Gson();
+        return  gson.toJson(this).toString()
+    }
+
 
 }

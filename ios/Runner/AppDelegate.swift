@@ -1,14 +1,11 @@
 import UIKit
 import Flutter
 
-
-
 @UIApplicationMain
 @objc class AppDelegate: FlutterAppDelegate {
     
-    
     @objc var idServiceManager : TNLIDServiceManager?
-        
+    
     override func application(
         _ application: UIApplication,
         didFinishLaunchingWithOptions launchOptions: [UIApplication.LaunchOptionsKey: Any]?) -> Bool {
@@ -32,11 +29,15 @@ import Flutter
                     let mobile = data?["mobile_no"] ?? ""
                     let nonce = data?["nonce"] ?? ""
                     let otp = data?["otp"] ?? ""
-
+                    
                     print("mobile - " + mobile)
                     uSelf.verifyOTP(completePhoneNumber: mobile, currentOtpValue: otp, nonceString: nonce, result: result)
                     break
-
+                case "passcodePolicy":
+                    let data = call.arguments as? [String: String]
+                    let mobile = data?["mobile_no"] ?? ""
+                    uSelf.getPasscodePolicy(mobile: mobile, result: result)
+                    break
                 default:
                     result(FlutterMethodNotImplemented)
                     break
@@ -48,15 +49,61 @@ import Flutter
             return super.application(application, didFinishLaunchingWithOptions: launchOptions)
         }
     
+    func getPasscodePolicy(mobile :String, result: @escaping FlutterResult) {
+            if let idServiceManager = idServiceManager {
+                //                let isdCode = self.selectedCountry == nil ? "+91" : self.selectedCountry!.isdCode
+                let completePhoneNumber = mobile
+                let accessToken = TLUserDefaults.sharedManager.getLastAccessToken() ?? ""
+                print("passcode policy accessToken = " + accessToken)
+                var values = ["Content-Type": "application/json"]
+                values["Authorization"] = "Bearer \(accessToken)"
+                let parameter = ["identifier" : "phone", "value" : "\(completePhoneNumber )" ] as [String : AnyObject]
+                print("passcode policy  parameter = " , parameter)
+
+                let requestConfig = TLRequestConfig.init(completeUrl: idServiceManager.passcodePolicyEndPoint, requestHeaders: values, requestType: .post, params: parameter)
+                TLNetworkManager.requestForConfig(requestConfig) { [weak self] (responseObject, errorObj) in
+                    
+                    guard let responseObject = responseObject, errorObj == nil else {
+                        print("passcode policy  errorObj = " , errorObj)
+                        result(FlutterError(code: "Passcode Policy Error",
+                                            message: "Passcode Policy failed. Try again after some time",
+                                            details: nil))
+                        
+                        return
+                    }
+                    var disc: Dictionary<String, String> = Dictionary()
+                
+        
+                    disc["isPasscodeSet"] = String((responseObject["isPasscodeSet"] as? Bool ?? false))
+                    disc["lastUpdatedBy"] = responseObject["lastUpdatedBy"] as? String
+                    disc["isEligible"] =  String(responseObject["isEligible"] as? Bool ?? false)
+                    disc["email"] = responseObject["email"] as? String
+                    disc["phone"] = responseObject["phone"] as? String
+                    disc["expiryDate"] = responseObject["expiryDate"] as? String
+                    disc["setPasscodeByDate"] = responseObject["setPasscodeByDate"] as? String
+    
+                    print("passcode policy  responseObject = " , responseObject)
+                    
+                      let encoder = JSONEncoder()
+                    if let data = try? encoder.encode(disc) {
+                        if let data = String(data: data, encoding: .utf8) {
+                            result(data)
+                        }
+                    }
+                  
+                }
+            }
+        
+    }
+    
     private func getNonce(mobile :String, result: @escaping FlutterResult) {
         
         self.requestLoginOTP(mobileNumber:mobile) { [weak self](status, response ,errorMessage) in
             if (errorMessage != nil) {
-                DispatchQueue.main.async{
+                DispatchQueue.main.async {
                     result(FlutterError(code: "UNAVAILABLE - iOS",
                                         message: errorMessage ?? "OTP request error",
                                         details: nil))
-                    
                 }
             }
             else{
@@ -237,3 +284,4 @@ import Flutter
         }
     }
 }
+

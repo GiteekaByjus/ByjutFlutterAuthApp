@@ -31,6 +31,7 @@ target 'Runner' do
   use_frameworks!
   use_modular_headers!
    pod 'AppAuth', '1.6.2'
+   pod 'Alamofire', '4.8'
 
   flutter_install_all_ios_pods File.dirname(File.realpath(__FILE__))
   target 'RunnerTests' do

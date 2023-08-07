@@ -52,6 +52,22 @@ public class IDService :NSObject {
         }
     }
     
+      // MARK: - Passcode Policy
+    /*
+     responds with the passcode policy for the mobilenumber
+     */
+   public func getPasscodepolicy(url: String, params:Dictionary<String, String>, completion: @escaping ([String: Any]?, Error?, Dictionary<String, AnyObject>?) -> Void){
+//        let params = ["phone":phoneNumber] as Dictionary<String, String>
+       self.sendRequest(url, parameters: params) { [weak self] responseObject, error, responseHeaders  in
+            guard let responseObject = responseObject, error == nil else {
+                print(error ?? "Unknown error")
+                completion(nil, error, nil)
+                return
+            }
+           completion(responseObject, nil, responseHeaders)
+        }
+    }
+    
     /*
       params must contain
       values for keys -
